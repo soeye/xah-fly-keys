@@ -132,8 +132,8 @@
 (defvar xah-fly-command-mode-activate-hook nil "Hook for `xah-fly-command-mode-activate'")
 (defvar xah-fly-insert-mode-activate-hook nil "Hook for `xah-fly-insert-mode-activate'")
 
-(defvar xah-fly-use-control-key t "if nil, do not bind any control key. When t, standard keys for open, close, paste, are bound.")
-(defvar xah-fly-use-meta-key t "if nil, do not bind any meta key.")
+(defvar xah-fly-use-control-key nil "if nil, do not bind any control key. When t, standard keys for open, close, paste, are bound.")
+(defvar xah-fly-use-meta-key nil "if nil, do not bind any meta key.")
 
 
 ;; cursor movement
@@ -3094,7 +3094,7 @@ Version 2017-01-29"
   "The current keyboard layout. Use `xah-fly-keys-set-layout' to set the layout.
 If the value is nil, it's automatically set to \"dvorak\"."
   )
-(if xah-fly-key--current-layout nil (setq xah-fly-key--current-layout "dvorak"))
+(if xah-fly-key--current-layout nil (setq xah-fly-key--current-layout "qwerty"))
 
 (defvar xah-fly--current-layout-kmap nil
   "The current keyboard layout key map. Value is a alist. e.g. the value of `xah--dvorak-to-qwerty-kmap'.
@@ -3128,6 +3128,15 @@ Version 2019-02-12"
    (lambda ($pair)
      (define-key @keymap-name (kbd (xah-fly--key-char (car $pair))) (cdr $pair)))
    @key-cmd-alist))
+
+;; 使用自定义函数同时绑定多个按键，不使用xah-fly--define-keys，否则会绑定到dvorak布局的按键上
+(defun fly-dkeys (keymap-name key-cmd-alist)
+  (interactive)
+  (mapc
+   (lambda (pair)
+     (define-key keymap-name (kbd (car pair)) (cdr pair)))
+   key-cmd-alist))
+
 
 
 ;; keymaps
@@ -3411,7 +3420,7 @@ Version 2019-02-12"
    ("t" . xref-find-definitions)
    ("n" . xref-pop-marker-stack)))
 
-(xah-fly--define-keys
+(fly-dkeys
  (define-prefix-command 'xah-fly-leader-key-map)
  '(
    ("SPC" . xah-fly-insert-mode-activate)
@@ -3614,14 +3623,14 @@ Version 2019-02-12"
   (progn
     (define-key xah-fly-key-map (kbd "<home>") 'xah-fly-command-mode-activate)
     (define-key xah-fly-key-map (kbd "<menu>") 'xah-fly-command-mode-activate)
-    (define-key xah-fly-key-map (kbd "<f8>") 'xah-fly-command-mode-activate-no-hook)
+    ;; (define-key xah-fly-key-map (kbd "<f8>") 'xah-fly-command-mode-activate-no-hook)
 
-    (define-key xah-fly-key-map (kbd "<f9>") xah-fly-leader-key-map)
+    ;; (define-key xah-fly-key-map (kbd "<f9>") xah-fly-leader-key-map)
 
-    (define-key xah-fly-key-map (kbd "<f11>") 'xah-previous-user-buffer)
-    (define-key xah-fly-key-map (kbd "<f12>") 'xah-next-user-buffer)
-    (define-key xah-fly-key-map (kbd "<C-f11>") 'xah-previous-emacs-buffer)
-    (define-key xah-fly-key-map (kbd "<C-f12>") 'xah-next-emacs-buffer))
+    ;; (define-key xah-fly-key-map (kbd "<f11>") 'xah-previous-user-buffer)
+    ;; (define-key xah-fly-key-map (kbd "<f12>") 'xah-next-user-buffer)
+    ;; (define-key xah-fly-key-map (kbd "<C-f11>") 'xah-previous-emacs-buffer)
+    ;; (define-key xah-fly-key-map (kbd "<C-f12>") 'xah-next-emacs-buffer))
 
   (progn
     ;; set arrow keys in isearch. left/right is backward/forward, up/down is history. press Return to exit
@@ -3695,7 +3704,7 @@ Version 2019-02-12"
 
   (progn
     (when xah-fly-use-meta-key
-      (define-key xah-fly-key-map (kbd "M-SPC") 'xah-fly-command-mode-activate-no-hook))))
+      (define-key xah-fly-key-map (kbd "M-SPC") 'xah-fly-command-mode-activate-no-hook)))))
 
 
 
@@ -3726,68 +3735,105 @@ Version 2019-02-12"
   "Set command mode keys.
 Version 2017-01-21"
   (interactive)
-  (xah-fly--define-keys
+  (fly-dkeys
    xah-fly-key-map
    '(
+     ("b" . mode-line-other-buffer)
+     ("d" . delete-char)
+     ("c" . xah-copy-line-or-region)
+     ("v" . yank)
+     ("y" . undo)
+     ("x" . xah-cut-line-or-region)
+     ("e" . open-line)
+     ("f" . xah-fly-insert-mode-activate)
+     ("s" . backward-delete-char)
+     ("w" . other-window)
+
+     ("n" . scroll-up-command)
+     ("m" . set-mark-command)
+     ("p" . scroll-down-command)
+     
+     ("i" . previous-line)
+     ("k" . next-line)
+     ("j" . left-char)
+     ("l" . right-char)
+     ("u" . left-word)
+     ("o" . right-word)
+     ("h" . xah-beginning-of-line-or-block)
+     (";" . xah-end-of-line-or-block)
+     
+     ("1" . delete-other-windows)
+     ("2" . switch-to-buffer)
+     ("3" . split-window-below)
+     ("4" . split-window-right)
+     ("6" . xah-select-block)
+     ("7" . xah-select-line)
+     ("8" . xah-fly-leader-key-map)
+     ("9" . xah-select-text-in-quote)
+     ("0" . xah-extend-selection)
+     ("/" . xah-comment-dwim)
+     
      ("~" . nil)
      (":" . nil)
 
      ("SPC" . xah-fly-leader-key-map)
-     ("DEL" . xah-fly-leader-key-map)
+     ;; ("DEL" . xah-fly-leader-key-map)
 
-     ("'" . xah-reformat-lines)
-     ("," . xah-shrink-whitespaces)
-     ("-" . xah-cycle-hyphen-underscore-space)
-     ("." . xah-backward-kill-word)
-     (";" . xah-comment-dwim)
-     ("/" . hippie-expand)
-     ("\\" . nil)
+     ;; ("'" . xah-reformat-lines)
+     ;; ("," . xah-shrink-whitespaces)
+     ;; ("-" . xah-cycle-hyphen-underscore-space)
+     ;; ("." . xah-backward-kill-word)
+     ;; (";" . xah-comment-dwim)
+     ;; ("/" . hippie-expand)
+     ;; ("\\" . nil)
      ;; ("=" . xah-forward-equal-sign)
-     ("[" . xah-backward-punct )
-     ("]" . xah-forward-punct)
-     ("`" . other-frame)
+     ;; ("[" . xah-backward-punct )
+     ;; ("]" . xah-forward-punct)
+     ;; ("`" . other-frame)
 
      ;; ("#" . xah-backward-quote)
      ;; ("$" . xah-forward-punct)
 
-     ("1" . xah-extend-selection)
-     ("2" . xah-select-line)
-     ("3" . delete-other-windows)
-     ("4" . split-window-below)
-     ("5" . delete-char)
-     ("6" . xah-select-block)
-     ("7" . xah-select-line)
-     ("8" . xah-extend-selection)
-     ("9" . xah-select-text-in-quote)
-     ("0" . xah-pop-local-mark-ring)
+     ;; ("1" . xah-extend-selection)
+     ;; ("2" . xah-select-line)
+     ;; ("3" . delete-other-windows)
+     ;; ("4" . split-window-below)
+     ;; ("5" . delete-char)
+     ;; ("6" . xah-select-block)
+     ;; ("7" . xah-select-line)
+     ;; ("8" . xah-extend-selection)
+     ;; ("9" . xah-select-text-in-quote)
+     ;; ("0" . xah-pop-local-mark-ring)
 
-     ("a" . execute-extended-command)
-     ("b" . isearch-forward)
-     ("c" . previous-line)
-     ("d" . xah-beginning-of-line-or-block)
-     ("e" . xah-delete-backward-char-or-bracket-text)
-     ("f" . undo)
-     ("g" . backward-word)
-     ("h" . backward-char)
-     ("i" . xah-delete-current-text-block)
-     ("j" . xah-copy-line-or-region)
-     ("k" . xah-paste-or-paste-previous)
+     ;; ("a" . execute-extended-command)
+     ;; ("b" . isearch-forward)
+     ;; ("c" . previous-line)
+     ;; ("d" . xah-beginning-of-line-or-block)
+     ;; ("e" . xah-delete-backward-char-or-bracket-text)
+     ;; ("f" . undo)
+     ;; ("g" . backward-word)
+     ;; ("h" . backward-char)
+     ;; ("i" . xah-delete-current-text-block)
+     ;; ("j" . xah-copy-line-or-region)
+     ;; ("k" . xah-paste-or-paste-previous)
      ;; ("l" . xah-fly-insert-mode-activate-space-before)
-     ("l" . xah-insert-space-before)
-     ("m" . xah-backward-left-bracket)
-     ("n" . forward-char)
-     ("o" . open-line)
-     ("p" . xah-kill-word)
-     ("q" . xah-cut-line-or-region)
-     ("r" . forward-word)
-     ("s" . xah-end-of-line-or-block)
-     ("t" . next-line)
-     ("u" . xah-fly-insert-mode-activate)
-     ("v" . xah-forward-right-bracket)
-     ("w" . xah-next-window-or-frame)
-     ("x" . xah-toggle-letter-case)
-     ("y" . set-mark-command)
-     ("z" . xah-goto-matching-bracket)))
+     ;; ("l" . xah-insert-space-before)
+     ;; ("m" . xah-backward-left-bracket)
+     ;; ("n" . forward-char)
+     ;; ("o" . open-line)
+     ;; ("p" . xah-kill-word)
+     ;; ("q" . xah-cut-line-or-region)
+     ;; ("r" . forward-word)
+     ;; ("s" . xah-end-of-line-or-block)
+     ;; ("t" . next-line)
+     ;; ("u" . xah-fly-insert-mode-activate)
+     ;; ("v" . xah-forward-right-bracket)
+     ;; ("w" . xah-next-window-or-frame)
+     ;; ("x" . xah-toggle-letter-case)
+     ;; ("y" . set-mark-command)
+     ;; ("z" . xah-goto-matching-bracket)
+
+     ))
 
   (define-key xah-fly-key-map (kbd (xah-fly--key-char "a"))
     (if (fboundp 'smex) 'smex (if (fboundp 'helm-M-x) 'helm-M-x 'execute-extended-command)))
@@ -3826,7 +3872,7 @@ Version 2018-05-07"
   ;; (setq xah-fly-key-map (make-sparse-keymap))
   ;; (setq xah-fly-key-map (make-keymap))
 
-  (xah-fly--define-keys
+  (fly-dkeys
    xah-fly-key-map
    '(
 
@@ -3857,7 +3903,7 @@ Version 2018-05-07"
      ("5" . nil)
      ("6" . nil)
      ("7" . nil)
-     ("8" . nil)
+     ("8" . xah-fly-leader-key-map)
      ("9" . nil)
      ("0" . nil)
 
@@ -3888,6 +3934,16 @@ Version 2018-05-07"
      ("y" . nil)
      ("z" . nil)
 
+     ("C-1" . (lambda () (interactive) (insert "1")))
+     ("C-2" . (lambda () (interactive) (insert "2")))
+     ("C-3" . (lambda () (interactive) (insert "3")))
+     ("C-4" . (lambda () (interactive) (insert "4")))
+     ("C-5" . (lambda () (interactive) (insert "5")))
+     ("C-6" . (lambda () (interactive) (insert "6")))
+     ("C-7" . (lambda () (interactive) (insert "7")))
+     ("C-8" . (lambda () (interactive) (insert "8")))
+     ("C-9" . (lambda () (interactive) (insert "9")))
+     ("C-0" . (lambda () (interactive) (insert "0")))
      ;;
      ))
 
